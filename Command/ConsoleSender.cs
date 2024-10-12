@@ -1,7 +1,6 @@
 ﻿using Morse.Utils;
 using System.Text;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Morse.Command
 {
@@ -24,7 +23,6 @@ namespace Morse.Command
                 }
                 sb.Append("&"+split[i]);
             }
-
             Regex colorRegex = new(pattern, RegexOptions.IgnoreCase);
 
             string[] messageSplit = colorRegex.Split(sb.ToString());

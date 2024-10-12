@@ -9,10 +9,10 @@ namespace Morse.Models
     public class MorseCode
     {
 
-        public string Letter { get; set; } = null!;
+        public char Letter { get; set; }
         public string LetterCode { get; set; } = null!;
 
-        public MorseCode(string letter, string letterCode) 
+        public MorseCode(char letter, string letterCode) 
         { 
             Letter = letter;
             LetterCode = letterCode;

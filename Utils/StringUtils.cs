@@ -22,6 +22,9 @@ namespace Morse.Utils
             {
                 value = value.Replace("%lang%", Lang);
             }
+            value = value.ToLower();
+            value = char.ToUpper(value[0]) + value[1..];
+
             return value;
         }
     }
