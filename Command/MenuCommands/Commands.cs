@@ -23,7 +23,6 @@ namespace Morse.Command.MenuCommands
         public bool OnCommand(ConsoleSender sender, string cmd, string[] args)
         {
             Console.Clear();
-
             Program.MenuHeader();
 
             //current used command for the StringUtils# %cmd%
@@ -31,14 +30,14 @@ namespace Morse.Command.MenuCommands
 
             if (cmd.Length > 16)
             {
-                sender.SendMessage(config.GetSection("moreThan16length").Value!, false);
+                sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:moreThan16length").Value!, false);
                 return true;
             }
 
             //help panel
             if (cmd.Equals("help"))
             {
-                foreach (var command in config.GetSection("HelpPage").GetChildren().AsEnumerable())
+                foreach (var command in Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:HelpPage").GetChildren().AsEnumerable())
                 {
                     sender.SendMessage($"{command.Value}", false);
                 }
@@ -50,7 +49,7 @@ namespace Morse.Command.MenuCommands
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage(config.GetSection("decodeUsage").Value!,false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:decodeUsage").Value!,false);
                     return true;
                 }
                 Program.manager.decode(MergeCommandArguments(args).TrimEnd(' '));
@@ -62,7 +61,7 @@ namespace Morse.Command.MenuCommands
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage(config.GetSection("encodeUsage").Value!, false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:encodeUsage").Value!, false);
                     return true;
                 }
                 Program.manager.encode(MergeCommandArguments(args).ToUpper().TrimEnd(' '));
@@ -75,7 +74,7 @@ namespace Morse.Command.MenuCommands
                 string exit;
                 do
                 {
-                    sender.SendMessage(config.GetSection("exitText").Value!,false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:exitText").Value!,false);
                     exit = Console.ReadLine()!;
 
                 } while (!(exit.Equals("y") || exit.Equals("n")));
@@ -94,7 +93,7 @@ namespace Morse.Command.MenuCommands
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage(config.GetSection("changeLangUsage").Value!, false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:changeLangUsage").Value!, false);
                     return true;
                 }
                 var vane = Program.cfg.GetConfig().GetSection("LanguageSettings").GetChildren().AsEnumerable();
@@ -107,7 +106,7 @@ namespace Morse.Command.MenuCommands
                         json["AppSettings"]!["lang"] = args[0];
                         File.WriteAllText("appsettings.json", json.ToString());
 
-                        StringUtils.Lang = args[0];
+                        StringUtils.Lang = json["AppSettings"]!["lang"]!.ToString();
 
                         Console.Clear();
                         Program.MenuHeader();
@@ -115,7 +114,7 @@ namespace Morse.Command.MenuCommands
                     }
                 }
 
-                sender.SendMessage(config.GetSection("languageNotFound").Value!, false);
+                sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:languageNotFound").Value!, false);
                 return true;
             }
 
@@ -124,7 +123,7 @@ namespace Morse.Command.MenuCommands
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage(config.GetSection("changeCharactersUsage").Value!,false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:changeCharactersUsage").Value!,false);
                     return true;
                 }
 
@@ -136,7 +135,7 @@ namespace Morse.Command.MenuCommands
                     
                     Program.manager.ChangeMorseCharacters(shortChar, longChar);
 
-                    sender.SendMessage(config.GetSection("successChangeCharacters").Value!, false);
+                    sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:successChangeCharacters").Value!, false);
 
                     StringUtils.ShortChar = shortChar;
                     StringUtils.LongChar = longChar;
@@ -156,7 +155,8 @@ namespace Morse.Command.MenuCommands
             string commandReference = CompareCommandsToArgs(cmd.ToLower());
 
             StringUtils.CmdReference = commandReference;
-            sender.SendMessage(config.GetSection("commandNotFound").Value!, false);
+            //sender.SendMessage(config.GetSection("commandNotFound").Value!, false);
+            sender.SendMessage(Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:commandNotFound").Value!, false);
             return true;
         }
 
