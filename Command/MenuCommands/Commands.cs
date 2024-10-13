@@ -16,11 +16,14 @@ namespace Morse.Command.MenuCommands
     public class Commands : ICommandExecutor
     {
 
-        private static IConfigurationRoot cfg = Program.cfg.getConfig();
+        private readonly JObject json = JObject.Parse(File.ReadAllText("appsettings.json"));
+
+        private static IConfigurationSection config = Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}")!;
 
         public bool OnCommand(ConsoleSender sender, string cmd, string[] args)
         {
             Console.Clear();
+
             Program.MenuHeader();
 
             //current used command for the StringUtils# %cmd%
@@ -28,47 +31,51 @@ namespace Morse.Command.MenuCommands
 
             if (cmd.Length > 16)
             {
-                sender.SendMessage(cfg.GetSection($"LanguageSettings:{StringUtils.Lang}:moreThan16length").Value!);
+                sender.SendMessage(config.GetSection("moreThan16length").Value!, false);
                 return true;
             }
 
+            //help panel
             if (cmd.Equals("help"))
             {
-                foreach (var command in cfg.GetSection($"LanguageSettings:{StringUtils.Lang}:HelpPage").GetChildren().AsEnumerable())
+                foreach (var command in config.GetSection("HelpPage").GetChildren().AsEnumerable())
                 {
-                    sender.SendMessage($"{command.Value}");
+                    sender.SendMessage($"{command.Value}", false);
                 }
                 return true;
             }
 
+            //decode morse into regular text
             if (cmd.Equals("decode"))
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage("&12Please, enter a text to decode!");
+                    sender.SendMessage(config.GetSection("decodeUsage").Value!,false);
                     return true;
                 }
                 Program.manager.decode(MergeCommandArguments(args).TrimEnd(' '));
                 return true;
             }
 
+            //encode text into morse
             if (cmd.Equals("encode"))
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage("&12Please, enter a text to encode!");
+                    sender.SendMessage(config.GetSection("encodeUsage").Value!, false);
                     return true;
                 }
                 Program.manager.encode(MergeCommandArguments(args).ToUpper().TrimEnd(' '));
                 return true;
             }
 
+            //Exit from the application
             if (cmd.Equals("exit"))
             {
                 string exit;
                 do
                 {
-                    sender.SendMessage(cfg.GetSection($"LanguageSettings:{StringUtils.Lang}:exitText").Value!);
+                    sender.SendMessage(config.GetSection("exitText").Value!,false);
                     exit = Console.ReadLine()!;
 
                 } while (!(exit.Equals("y") || exit.Equals("n")));
@@ -82,24 +89,33 @@ namespace Morse.Command.MenuCommands
                 return true;
             }
 
+            //change language
             if(cmd.Equals("changelang"))
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage("&12Please, enter a language to change it!");
+                    sender.SendMessage(config.GetSection("changeLangUsage").Value!, false);
                     return true;
                 }
+                var vane = Program.cfg.GetConfig().GetSection("LanguageSettings").GetChildren().AsEnumerable();
 
-                var json = JObject.Parse(File.ReadAllText("appsettings.json"));
-                json["AppSettings"]!["lang"] = args[0];
-                File.WriteAllText("appsettings.json", json.ToString());
-
-                Process.Start(new ProcessStartInfo
+                foreach (var v in vane)
                 {
-                    FileName = Process.GetCurrentProcess().MainModule!.FileName,
-                    UseShellExecute = true
-                });
-                Environment.Exit(0);
+                   if(v.Key == args[0])
+                    {
+                        //modifying language in appsettings.json
+                        json["AppSettings"]!["lang"] = args[0];
+                        File.WriteAllText("appsettings.json", json.ToString());
+
+                        StringUtils.Lang = args[0];
+
+                        Console.Clear();
+                        Program.MenuHeader();
+                        return true;
+                    }
+                }
+
+                sender.SendMessage(config.GetSection("languageNotFound").Value!, false);
                 return true;
             }
 
@@ -108,29 +124,39 @@ namespace Morse.Command.MenuCommands
             {
                 if (args.Length == 0)
                 {
-                    sender.SendMessage("&12Please, enter short and long characters!");
+                    sender.SendMessage(config.GetSection("changeCharactersUsage").Value!,false);
                     return true;
                 }
+
                 char shortChar = char.Parse(args[0]);
                 char longChar = char.Parse(args[1]);
+
                 try
                 {
+                    
                     Program.manager.ChangeMorseCharacters(shortChar, longChar);
-                    sender.SendMessage("&10Successfully changed the morse characters!");
-                    sender.SendMessage(shortChar+"");
-                    sender.SendMessage(longChar+"");
+
+                    sender.SendMessage(config.GetSection("successChangeCharacters").Value!, false);
+
+                    StringUtils.ShortChar = shortChar;
+                    StringUtils.LongChar = longChar;
+
+                    Console.Clear();
+                    Program.MenuHeader();
+
                     return true;
                 }
                 catch (InvalidCharacterCodeException ex)
                 {
-                    sender.SendMessage($"&12{ex.Message}");
+                    sender.SendMessage($"&12{ex.Message}",false);
                     return true;
                 }
             }
 
-
             string commandReference = CompareCommandsToArgs(cmd.ToLower());
-            sender.SendMessage($"&12%cmd% command not found! try this: {commandReference}");
+
+            StringUtils.CmdReference = commandReference;
+            sender.SendMessage(config.GetSection("commandNotFound").Value!, false);
             return true;
         }
 
@@ -152,7 +178,7 @@ namespace Morse.Command.MenuCommands
             int argumentLength = argument.Length;
             string output = "help command :c";
             Dictionary<string, int> commandsWithLength = new Dictionary<string, int>();
-            foreach (var item in cfg.GetSection($"LanguageSettings:{StringUtils.Lang}:HelpPage")!.GetChildren().AsEnumerable())
+            foreach (var item in config.GetSection("HelpPage")!.GetChildren().AsEnumerable())
             {
                 commandsWithLength.Add(item.Key, item.Key.Length);
             }

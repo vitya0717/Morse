@@ -1,6 +1,7 @@
 ﻿using Morse.Command;
 using Morse.Exceptions;
 using Morse.Utils;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,6 +17,8 @@ namespace Morse.Models
     {
 
         public List<MorseCode> loadedMorses = new List<MorseCode>();
+
+        private readonly JObject json = JObject.Parse(File.ReadAllText("appsettings.json"));
 
         private char _shortCharacter = '.';
         private char _longCharacter = '-';
@@ -53,24 +56,34 @@ namespace Morse.Models
 
         }
 
-        public MorseManager(char shortChar, char longChar)
-        {
-            ShortCharacter = shortChar;
-            LongCharacter = longChar;
-        }
-
         public void LoadCodeTable()
         {
             try
             {
-                var morseCollection = Program.cfg.getConfig().GetSection($"CharacterSet").GetChildren().AsEnumerable();
+                var morseCollection = Program.cfg.GetConfig().GetSection($"CharacterSet").GetChildren().AsEnumerable();
 
                 foreach (var item in morseCollection)
                 {
                     MorseCode temp = new MorseCode(char.Parse(item.Key), item.Value!);
-
                     loadedMorses.Add(temp);
                 }
+
+                char shortChar = char.Parse(Program.cfg.GetConfig().GetSection("AppSettings:shortCharacter").Value!);
+                char longChar = char.Parse(Program.cfg.GetConfig().GetSection("AppSettings:longCharacter").Value!);
+
+                if (_shortCharacter != shortChar || _longCharacter != longChar)
+                {
+                    for (int i = 0; i < loadedMorses.Count; i++)
+                    {
+                        loadedMorses[i].LetterCode = loadedMorses[i].LetterCode
+                            .Replace(_shortCharacter, shortChar)
+                            .Replace(_longCharacter, longChar);
+                    }
+                    ShortCharacter = shortChar;
+                    LongCharacter = longChar;
+                }
+                StringUtils.ShortChar = shortChar;
+                StringUtils.LongChar = longChar;
             }
             catch (Exception ex)
             {
@@ -95,7 +108,7 @@ namespace Morse.Models
                     outputText.Append(letter!.Letter);
                 }
             }
-            Program.sender.SendMessage(outputText.ToString());
+            Program.sender.SendMessage(outputText.ToString(), true);
         }
 
         public void encode(string text)
@@ -114,7 +127,7 @@ namespace Morse.Models
                     outputText.Append(letter.LetterCode!).Append(' ');
                 }
             }
-            Program.sender.SendMessage(outputText.ToString());
+            Program.sender.SendMessage(outputText.ToString(), true);
         }
 
         public void ChangeMorseCharacters(char shortChar, char longChar)
@@ -131,6 +144,11 @@ namespace Morse.Models
             }
             ShortCharacter = shortChar;
             LongCharacter = longChar;
+
+            json["AppSettings"]!["shortCharacter"] = _shortCharacter.ToString();
+            json["AppSettings"]!["longCharacter"] = _longCharacter.ToString();
+
+            File.WriteAllText("appsettings.json", json.ToString());
         }
     }
 }

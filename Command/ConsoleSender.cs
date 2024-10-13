@@ -5,8 +5,9 @@ using System.Text.RegularExpressions;
 namespace Morse.Command
 {
     public class ConsoleSender
-    {
-        public void SendMessage(string message)
+    { 
+
+        public void SendMessage(string message, bool onlyPalceholdersReplace)
         {
             Console.WriteLine();
             StringBuilder sb = new StringBuilder();
@@ -17,11 +18,11 @@ namespace Morse.Command
 
             for (int i = 0; i < split.Length; i++)
             {
-                if(!char.IsDigit(split[i][0]))
+                if (!char.IsDigit(split[i][0]))
                 {
                     split[i] = "15" + split[i];
                 }
-                sb.Append("&"+split[i]);
+                sb.Append("&" + split[i]);
             }
             Regex colorRegex = new(pattern, RegexOptions.IgnoreCase);
 
@@ -32,7 +33,7 @@ namespace Morse.Command
                 if (int.TryParse(messageSplit[i], out int result))
                 {
                     Console.ForegroundColor = (ConsoleColor)int.Parse(messageSplit[i]);
-                    Console.Write(StringUtils.Placeholders(messageSplit[i + 1]));
+                    Console.Write(StringUtils.Placeholders(messageSplit[i + 1], onlyPalceholdersReplace));
                     Console.ForegroundColor = ConsoleColor.White;
                 }
             }

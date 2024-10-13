@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Morse.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +9,6 @@ namespace Morse.Exceptions
 {
     public class InvalidCharacterCodeException : Exception
     {
-
-        public override string Message => "There was an error setting character codes.\nAvoid using the same symbol for both.";
-
-        public InvalidCharacterCodeException()
-        {
-
-        }
+        public override string Message => Program.cfg.GetConfig().GetSection($"LanguageSettings:{StringUtils.Lang}:InvalidCharacterCodesMessage").Value!;
     }
 }

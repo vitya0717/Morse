@@ -13,7 +13,7 @@ namespace Morse.Configuration
             
         }
 
-        public IConfigurationRoot getConfig()
+        public IConfigurationRoot GetConfig()
         {
             var config = new ConfigurationBuilder()
                   .SetBasePath(Directory.GetCurrentDirectory())
